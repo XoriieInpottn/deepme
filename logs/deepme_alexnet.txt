@@ -1,0 +1,15 @@
+cluster0: 560       285766     accuracy:0.51 -> 0.51
+cluster1: 842       348341     accuracy:0.30 -> 0.29
+cluster2: 1074     507696    accuracy:0.40 ->0.40
+cluster3: 449       154574     accuracy:0.46 ->0.46
+cluster4: 902       429046     accuracy:0.44 ->0.44
+cluster5: 770       385654     accuracy:0.48 ->0.48
+cluster6: 1191     580498     accuracy:0.44 ->0.42
+cluster7: 294       122764     accuracy:0.39 -> 0.40
+cluster8: 525       246688     accuracy:0.39 -> 0.39
+cluster9: 2403     1170241   accuracy:0.41 ->
+cluster10: 1504   651069    accuracy:0.44 ->
+cluster11: 2089   991677    accuracy:0.39 ->
+cluster12: 837     420776    accuracy:0.47 ->
+cluster13: 512     254108    accuracy:0.47 ->
+cluster14: 1711   744114    accuracy:0.42 ->0.41

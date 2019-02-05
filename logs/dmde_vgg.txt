@@ -1,0 +1,20 @@
+task_00: valid acc 0.5567
+task_01: valid acc 0.5591
+task_02: valid acc 0.5198
+task_03: valid acc 0.4877
+task_04: valid acc 0.4956
+task_05: valid acc 0.5044
+task_06: valid acc
+task_07: valid acc 0.5206
+task_08: valid acc
+task_09: valid acc
+task_10: valid acc 0.5268
+task_11: valid acc 0.5651
+task_12: valid acc 0.5230
+task_13: valid acc 0.5178
+task_14: valid acc 0.5347
+task_15: valid acc 0.5143
+task_16: valid acc 0.5222
+task_17: valid acc 0.5711
+task_18: valid acc 0.5385
+task_19: valid acc 0.5293
