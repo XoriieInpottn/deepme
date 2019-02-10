@@ -10,6 +10,6 @@ task_08: valid acc 0.4469
 task_09: valid acc 0.4120
 task_10: valid acc 0.4513
 task_11: valid acc 0.4059
-task_12: valid acc
-task_13: valid acc
-task_14: valid acc
+task_12: valid acc 0.5116
+task_13: valid acc 0.4983
+task_14: valid acc 0.4330
