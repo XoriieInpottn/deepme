@@ -7,7 +7,6 @@
 """
 
 import argparse
-import gzip
 import multiprocessing
 import pickle
 
@@ -15,7 +14,6 @@ import pymongo
 import tqdm
 
 queue1 = multiprocessing.Queue(maxsize=100)
-queue2 = multiprocessing.Queue(maxsize=100)
 
 lock = multiprocessing.Semaphore(1)
 
@@ -31,8 +29,7 @@ def foo():
         if doc is None:
             break
         label_index = doc['label_index']
-        # y = pickle.loads(doc['y'])
-        y = pickle.loads(gzip.decompress(doc['y']))
+        y = pickle.loads(doc['y'])
         r = [(i, v) for i, v in enumerate(y)]
         r.sort(key=lambda a: -a[1])
 
@@ -53,14 +50,14 @@ def foo():
 def main(args):
     with pymongo.MongoClient('sis3.ustcdm.org') as conn:
         conn['admin'].authenticate('root', 'SELECT * FROM users;')
-        db = conn[f'imagenet_{args.model}']
-        coll = db['final_test']
+        db = conn['imagenet_deepme']
+        coll = db[f'final_{args.model}']
 
         ps = [multiprocessing.Process(target=foo, daemon=True) for _ in range(args.num_process)]
         for p in ps:
             p.start()
 
-        progress = tqdm.tqdm(total=coll.count(), ncols=64)
+        progress = tqdm.tqdm(total=coll.count(), ncols=96)
         for i, doc in enumerate(coll.find(), 1):
             queue1.put(doc)
 

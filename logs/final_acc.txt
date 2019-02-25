@@ -1,0 +1,6 @@
+
+vgg             : top1=0.276212, top3=0.457149, top5=0.531655
+dmde            : top1=0.295140, top3=0.487496, top5=0.564911
+deepme-nossc    : top1=0.202356, top3=0.401587, top5=0.492007
+deepme-nogate   : top1=0.078421, top3=0.213647, top5=0.298465
+deepme          : top1=0.321278, top3=0.517197, top5=0.597899

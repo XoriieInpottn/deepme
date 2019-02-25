@@ -27,9 +27,8 @@ def mmm(mapping):
             break
 
         fusion = np.zeros(shape=(10184,), dtype=np.float)
-        gate = pickle.loads(docs[-1]['y'])
-        for task_index, (doc, a) in enumerate(zip(docs[:-1], gate)):
-            y = pickle.loads(doc['y']) * a
+        for task_index, doc in enumerate(docs):
+            y = pickle.loads(doc['y'])
             for local_index, value in enumerate(y):
                 global_index = mapping.to_global(task_index, local_index)
                 fusion[global_index] += value
@@ -45,7 +44,7 @@ def mmm(mapping):
 def rrr():
     with pymongo.MongoClient('sis4.ustcdm.org') as conn:
         conn['admin'].authenticate('root', 'SELECT * FROM users;')
-        coll = conn['imagenet_deepme']['final_test']
+        coll = conn['imagenet_deepme']['final_deepme_no_gate']
         buffer = []
 
         hit = tot = 0
@@ -90,7 +89,7 @@ def main(args):
         rp.start()
 
         progress = tqdm.tqdm(total=colls[0].count(), ncols=96)
-        for docs in zip(*(coll.find() for coll in colls), db['gate_test'].find()):
+        for docs in zip(*(coll.find() for coll in colls)):
             queue_doc.put(docs)
             progress.update()
         progress.close()
