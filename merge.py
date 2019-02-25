@@ -24,6 +24,28 @@ class IndexMapping(list):
         self.sort(key=lambda a: a[0])
 
 
+class TaskMapping(list):
+
+    def __init__(self, coll):
+        super(TaskMapping, self).__init__(
+            (doc['label_index'], doc['task_label_indexes'])
+            for doc in coll.find()
+        )
+        self.sort(key=lambda a: a[0])
+
+
+
+def _main(args):
+    with pymongo.MongoClient('sis4.ustcdm.org') as conn:
+        conn['admin'].authenticate('root', 'SELECT * FROM users;')
+        db = conn['imagenet_dmde']
+        mapping = TaskMapping(db['clusters'])
+
+        colls = [db[f'result_{i:02d}_{args.split}'] for i in range(20)]
+        for docs in zip(*(coll.find() for coll in colls)):
+            pass
+
+
 def main(args):
     with pymongo.MongoClient('sis4.ustcdm.org') as conn:
         index_mapping = IndexMapping(conn['imagenet']['labels'])

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 def foo(conn, wnid_assign, num_tasks, name):
-    colls = [conn['imagenet_deepme'][f'task_{i:02d}_{name}'] for i in range(num_tasks)]
+    colls = [conn['imagenet_deepme'][f'newtask_{i:02d}_{name}'] for i in range(num_tasks)]
     for coll in colls:
         coll.create_index('label_index')
         coll.remove()
@@ -62,6 +62,9 @@ def main(args):
             wnid_assign[doc['wnid']] = task_label_indexes
             for task_index, _ in task_label_indexes:
                 task_indexes.add(task_index)
+
+        print(wnid_assign['n02705429'])
+        exit()
 
         foo(conn, wnid_assign, len(task_indexes), 'train')
         foo(conn, wnid_assign, len(task_indexes), 'valid')

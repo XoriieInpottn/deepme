@@ -33,7 +33,7 @@ class Model(ph.Model):
         dropout = ph.Dropout('dropout')
         h = dropout.setup(h)
 
-        dense = ph.Linear('dense', encoder.fc7.output_size, self._num_classes)
+        dense = ph.Linear('dense', encoder.fc7.output_size, self._num_classes + 1)
         y = dense.setup(h)
         y = tf.nn.softmax(y)
         label = tf.argmax(y, axis=1)
@@ -45,8 +45,8 @@ class Model(ph.Model):
         )
 
         input_label = ph.placeholder('input_label', (None,), ph.int)
-        y_target = tf.one_hot(input_label, self._num_classes)
-        loss = ph.ops.cross_entropy(y_target, y)
+        y_target = tf.one_hot(input_label, self._num_classes + 1)
+        loss = -ph.ops.log_likelihood(y_target, y)
         loss = tf.reduce_mean(loss)
 
         var_list = dense.get_trainable_variables()
@@ -177,15 +177,15 @@ class Main(ph.Application):
 
             if args.write_results:
                 coll = conn['imagenet_vgg']['train']
-                coll_output = db[f'result_{args.task_index:02d}_train']
+                coll_output = db[f'newresult_{args.task_index:02d}_train']
                 self._write_result(model, coll, coll_output)
 
                 coll = conn['imagenet_vgg']['valid']
-                coll_output = db[f'result_{args.task_index:02d}_valid']
+                coll_output = db[f'newresult_{args.task_index:02d}_valid']
                 self._write_result(model, coll, coll_output)
 
                 coll = conn['imagenet_vgg']['test']
-                coll_output = db[f'result_{args.task_index:02d}_test']
+                coll_output = db[f'newresult_{args.task_index:02d}_test']
                 self._write_result(model, coll, coll_output)
 
         print('All clear.')
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     _parser.add_argument('--num-loops', type=int, default=50000)
     _parser.add_argument('--task-index', type=int, required=True)
     _parser.add_argument('--vgg16', required=True)
-    _parser.add_argument('--db-name', default='imagenet_deepme')
+    _parser.add_argument('--db-name', default='imagenet_dmde')
     _parser.add_argument('--keep-prob', type=float, default=1.0)
     _parser.add_argument('--write-results', action='store_true', default=False)
     #
