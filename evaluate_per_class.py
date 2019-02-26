@@ -7,8 +7,6 @@
 """
 
 import argparse
-import gzip
-import multiprocessing
 import pickle
 
 import pymongo
@@ -20,6 +18,10 @@ class ClassStat(object):
     def __init__(self):
         self.hit = 0
         self.total = 0
+
+    @property
+    def acc(self):
+        return self.hit / self.total
 
 
 stats = [ClassStat() for _ in range(10184)]
@@ -45,16 +47,14 @@ def main(args):
             progress.update()
         progress.close()
 
-
-
-    print('All clear.')
+        for label_index, stat in enumerate(stats):
+            print(f'{label_index}={stat.acc}')
     return 0
 
 
 if __name__ == '__main__':
     _parser = argparse.ArgumentParser()
     _parser.add_argument('--model', required=True)
-    _parser.add_argument('--num-process', type=int, default=10)
     #
     _args = _parser.parse_args()
     exit(main(_args))
