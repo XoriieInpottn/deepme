@@ -60,8 +60,8 @@ class Model(ph.Model):
         update = tf.train.AdamOptimizer(lr.value).apply_gradients(zip(grad_list, var_list))
         self.train = ph.Step(
             inputs=(input_image, input_label),
-            outputs=loss,
-            updates=(update, lr.update_op),
+            outputs=(loss, lr.variable),
+            updates=update,
             givens={dropout.keep_prob: self._keep_prob}
         )
 
@@ -77,7 +77,7 @@ class Model(ph.Model):
         self.fine_tune = ph.Step(
             inputs=(input_image, input_label),
             outputs=loss,
-            updates=(update, lr.update_op),
+            updates=update,
             givens={dropout.keep_prob: self._keep_prob}
         )
 
@@ -128,8 +128,8 @@ class Main(ph.Application):
                     _, image, label = ds_train.next()
                 except StopIteration:
                     _, image, label = ds_train.next()
-                loss, = model.train(image, label)
-                progress.set_description(f'Training loss={loss:.06f}', refresh=False)
+                loss, lr = model.train(image, label)
+                progress.set_description(f'Training loss={loss:.06f}, lr={lr:.06f}', refresh=False)
                 progress.update()
             progress.close()
 

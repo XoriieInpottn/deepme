@@ -187,7 +187,7 @@ class Main(ph.Application):
             ################################################################################
             # pre-train
             ################################################################################
-            progress = tqdm(total=args.num_loops_1, ncols=128)
+            progress = tqdm(total=args.num_loops_1, ncols=96)
             for i in range(args.num_loops_1):
                 self.checkpoint()
                 try:
@@ -199,7 +199,7 @@ class Main(ph.Application):
                 progress.update()
             progress.close()
 
-            progress = tqdm(total=coll_valid.count(), ncols=128, desc='Validating')
+            progress = tqdm(total=coll_valid.count(), ncols=96, desc='Validating')
             cal = ph.train.AccCalculator()
             for _, image, label in ds_valid:
                 label_pred, _ = model.predict(image)
@@ -211,7 +211,7 @@ class Main(ph.Application):
             ################################################################################
             # fine tune
             ################################################################################
-            progress = tqdm(total=args.num_loops_2, ncols=128)
+            progress = tqdm(total=args.num_loops_2, ncols=96)
             monitor = ph.train.EarlyStopping(5, model)
             for i in range(args.num_loops_2):
                 self.checkpoint()
@@ -223,7 +223,7 @@ class Main(ph.Application):
                 progress.set_description(f'Fine tune loss={loss:.03e}, lr={lr:.03e}', refresh=False)
 
                 if (i + 1) % 1000 == 0:
-                    progress_valid = tqdm(total=coll_valid.count(), ncols=128, desc='Validating')
+                    progress_valid = tqdm(total=coll_valid.count(), ncols=96, desc='Validating')
                     cal = ph.train.AccCalculator()
                     for _, image, label in ds_valid:
                         label_pred, _ = model.predict(image)

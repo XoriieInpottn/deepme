@@ -1,0 +1,23 @@
+n03187751
+dialyzer, dialysis machine
+0.7241379, 0.10344828
+
+n03004531
+chamfer bit
+0.8636364, 0.27272728
+
+n01457407
+shrimpfish, shrimp-fish
+0.74285716, 0.14285715
+
+n02227966
+long-horned grasshopper, tettigoniid
+0.6818182, 0.13636364
+
+n02600798
+yellow goatfish, Mulloidichthys martinicus
+0.7096774, 0.16129032
+
+n04168840
+seismograph
+0.68421054, 0.15789473

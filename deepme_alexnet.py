@@ -21,7 +21,6 @@ class Model(ph.Model):
 
     def __init__(self,
                  name,
-                 hidden_size,
                  num_classes,
                  keep_prob,
                  reg,
@@ -30,7 +29,6 @@ class Model(ph.Model):
                  learning_rate_2,
                  num_loops_1,
                  num_loops_2):
-        self._hidden_size = hidden_size
         self._num_classes = num_classes
         self._keep_prob = keep_prob
         self._reg = reg
@@ -45,13 +43,15 @@ class Model(ph.Model):
         input_image = ph.placeholder('input_image', (None, alexnet.HEIGHT, alexnet.WIDTH, 3), ph.float)
         encoder = alexnet.AlexNet('encoder', ph.ops.swish)
         dropout = ph.Dropout('dropout')
-        dense = ph.Linear('dense', encoder['dense_7'].output_size, self._hidden_size)
-        output_layer = ph.Linear('output_layer', dense.output_size, self._num_classes)
+        output_layer = ph.Linear(
+            'output_layer',
+            encoder['dense_7'].output_size,
+            self._num_classes
+        )
 
         encoder.setup(input_image)
         y = ph.setup(
             encoder['feature_7'], [
-                dense, ph.ops.swish,
                 dropout,
                 output_layer, tf.nn.softmax
             ]
@@ -72,10 +72,7 @@ class Model(ph.Model):
         ################################################################################
         # pre-train
         ################################################################################
-        vars_new = [
-            *dense.get_trainable_variables(),
-            *output_layer.get_trainable_variables()
-        ]
+        vars_new = output_layer.get_trainable_variables()
         reg = ph.reg.L2Regularizer(self._reg)
         reg.setup(vars_new)
         lr = ph.train.ExponentialDecayedValue(
@@ -168,7 +165,6 @@ class Main(ph.Application):
 
             model = Model(
                 'model',
-                hidden_size=args.hidden_size,
                 num_classes=num_classes,
                 keep_prob=args.keep_prob,
                 reg=args.reg,
@@ -184,7 +180,7 @@ class Main(ph.Application):
             ################################################################################
             # pre-train
             ################################################################################
-            progress = tqdm(total=args.num_loops_1, ncols=128)
+            progress = tqdm(total=args.num_loops_1, ncols=96)
             for i in range(args.num_loops_1):
                 self.checkpoint()
                 try:
@@ -192,11 +188,11 @@ class Main(ph.Application):
                 except StopIteration:
                     _, image, label = ds_train.next()
                 loss, lr = model.train(image, label)
-                progress.set_description(f'Pre-train loss={loss:.03e}, lr={lr:.03e}', refresh=False)
+                progress.set_description(f'Pre-train loss={loss:.02e}, lr={lr:.02e}', refresh=False)
                 progress.update()
             progress.close()
 
-            progress = tqdm(total=coll_valid.count(), ncols=128, desc='Validating')
+            progress = tqdm(total=coll_valid.count(), ncols=96, desc='Validating')
             cal = ph.train.AccCalculator()
             for _, image, label in ds_valid:
                 label_pred, _ = model.predict(image)
@@ -208,7 +204,7 @@ class Main(ph.Application):
             ################################################################################
             # fine tune
             ################################################################################
-            progress = tqdm(total=args.num_loops_2, ncols=128)
+            progress = tqdm(total=args.num_loops_2, ncols=96)
             monitor = ph.train.EarlyStopping(5, model)
             for i in range(args.num_loops_2):
                 self.checkpoint()
@@ -217,10 +213,10 @@ class Main(ph.Application):
                 except StopIteration:
                     _, image, label = ds_train.next()
                 loss, lr = model.fine_tune(image, label)
-                progress.set_description(f'Fine tune loss={loss:.03e}, lr={lr:.03e}', refresh=False)
+                progress.set_description(f'Fine tune loss={loss:.02e}, lr={lr:.02e}', refresh=False)
 
                 if (i + 1) % 1000 == 0:
-                    progress_valid = tqdm(total=coll_valid.count(), ncols=128, desc='Validating')
+                    progress_valid = tqdm(total=coll_valid.count(), ncols=96, desc='Validating')
                     cal = ph.train.AccCalculator()
                     for _, image, label in ds_valid:
                         label_pred, _ = model.predict(image)
@@ -294,7 +290,6 @@ if __name__ == '__main__':
     _parser.add_argument('--learning-rate-1', type=float, required=True)
     _parser.add_argument('--learning-rate-2', type=float, required=True)
 
-    _parser.add_argument('--hidden-size', type=int, required=True)
     _parser.add_argument('--task-index', type=int, required=True)
     _parser.add_argument('--alexnet', required=True)
     _parser.add_argument('--write-results', action='store_true', default=False)

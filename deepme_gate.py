@@ -61,7 +61,7 @@ class Model(ph.Model):
         self.train = ph.Step(
             inputs=(image, target),
             outputs=loss,
-            updates=(update, lr.update_op),
+            updates=update,
             givens={dropout.keep_prob: self._keep_prob}
         )
 
@@ -77,7 +77,7 @@ class Model(ph.Model):
         self.fine_tune = ph.Step(
             inputs=(image, target),
             outputs=loss,
-            updates=(update, lr.update_op),
+            updates=update,
             givens={dropout.keep_prob: self._keep_prob}
         )
 

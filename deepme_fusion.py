@@ -33,7 +33,7 @@ def mmm(mapping):
             for local_index, value in enumerate(y):
                 global_index = mapping.to_global(task_index, local_index)
                 fusion[global_index] += value
-        fusion = fusion / np.sum(np.exp(fusion))
+        fusion = np.exp(fusion) / np.sum(np.exp(fusion))
 
         _id = docs[0]['_id']
         true_index = docs[0]['index']
