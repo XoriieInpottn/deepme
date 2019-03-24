@@ -21,6 +21,7 @@ class Model(ph.Model):
 
     def __init__(self,
                  name,
+                 hidden_size,
                  num_classes,
                  keep_prob,
                  reg,
@@ -29,6 +30,7 @@ class Model(ph.Model):
                  learning_rate_2,
                  num_loops_1,
                  num_loops_2):
+        self._hidden_size = hidden_size
         self._num_classes = num_classes
         self._keep_prob = keep_prob
         self._reg = reg
@@ -40,22 +42,26 @@ class Model(ph.Model):
         super(Model, self).__init__(name)
 
     def _build(self):
+        activation = ph.ops.swish
         input_image = ph.placeholder('input_image', (None, alexnet.HEIGHT, alexnet.WIDTH, 3), ph.float)
-        encoder = alexnet.AlexNet('encoder', ph.ops.swish)
-        dropout = ph.Dropout('dropout')
-        output_layer = ph.Linear(
-            'output_layer',
-            encoder['dense_7'].output_size,
-            self._num_classes
-        )
-
+        encoder = alexnet.AlexNet('encoder', activation)
         encoder.setup(input_image)
+        if self._hidden_size is not None:
+            dense = ph.Linear('dense', encoder['dense_7'].output_size, self._hidden_size)
+            output_layer = ph.Linear('output_layer', dense.output_size, self._num_classes)
+        else:
+            dense = None
+            output_layer = ph.Linear('output_layer', encoder['dense_7'].output_size, self._num_classes)
+
+        dropout = ph.Dropout('dropout')
         y = ph.setup(
             encoder['feature_7'], [
+                dense, activation if dense is not None else None,
                 dropout,
                 output_layer, tf.nn.softmax
             ]
         )
+
         label = tf.argmax(y, axis=1)
 
         self.predict = ph.Step(
@@ -72,7 +78,13 @@ class Model(ph.Model):
         ################################################################################
         # pre-train
         ################################################################################
-        vars_new = output_layer.get_trainable_variables()
+        if self._hidden_size is not None:
+            vars_new = [
+                *dense.get_trainable_variables(),
+                *output_layer.get_trainable_variables()
+            ]
+        else:
+            vars_new = output_layer.get_trainable_variables()
         reg = ph.reg.L2Regularizer(self._reg)
         reg.setup(vars_new)
         lr = ph.train.ExponentialDecayedValue(
@@ -81,9 +93,10 @@ class Model(ph.Model):
             num_loops=self._num_loops_1,
             min_value=self._learning_rate_1 / 10
         )
+        grads = tf.gradients(loss + reg.get_loss(), vars_new)
         update_1 = tf.train.AdamOptimizer(lr.value).apply_gradients([
             (tf.clip_by_value(g, -self._grad_clip, self._grad_clip), v)
-            for g, v in zip(tf.gradients(loss + reg.get_loss(), vars_new), vars_new) if g is not None
+            for g, v in zip(grads, vars_new) if g is not None
         ])
         # with tf.control_dependencies([update_1]):
         #     update_2 = ph.train.L2Regularizer(self._reg).apply(vars_new)
@@ -165,6 +178,7 @@ class Main(ph.Application):
 
             model = Model(
                 'model',
+                hidden_size=args.hidden_size,
                 num_classes=num_classes,
                 keep_prob=args.keep_prob,
                 reg=args.reg,
@@ -205,7 +219,7 @@ class Main(ph.Application):
             # fine tune
             ################################################################################
             progress = tqdm(total=args.num_loops_2, ncols=96)
-            monitor = ph.train.EarlyStopping(5, model)
+            monitor = ph.train.EarlyStopping(3, model)
             for i in range(args.num_loops_2):
                 self.checkpoint()
                 try:
@@ -215,7 +229,7 @@ class Main(ph.Application):
                 loss, lr = model.fine_tune(image, label)
                 progress.set_description(f'Fine tune loss={loss:.02e}, lr={lr:.02e}', refresh=False)
 
-                if (i + 1) % 1000 == 0:
+                if (i + 1) % 5000 == 0:
                     progress_valid = tqdm(total=coll_valid.count(), ncols=96, desc='Validating')
                     cal = ph.train.AccCalculator()
                     for _, image, label in ds_valid:
@@ -281,8 +295,8 @@ if __name__ == '__main__':
     _parser.add_argument('-g', '--gpu', default='0', help='Choose which GPU to use.')
     _parser.add_argument('--batch-size', type=int, default=64)
 
-    _parser.add_argument('--num-loops-1', type=int, default=5000)
-    _parser.add_argument('--num-loops-2', type=int, default=100000)
+    _parser.add_argument('--num-loops-1', type=int, default=10000)
+    _parser.add_argument('--num-loops-2', type=int, default=200000)
 
     _parser.add_argument('--keep-prob', type=float, required=True)
     _parser.add_argument('--reg', type=float, required=True)
@@ -290,6 +304,7 @@ if __name__ == '__main__':
     _parser.add_argument('--learning-rate-1', type=float, required=True)
     _parser.add_argument('--learning-rate-2', type=float, required=True)
 
+    _parser.add_argument('--hidden-size', type=int, default=None)
     _parser.add_argument('--task-index', type=int, required=True)
     _parser.add_argument('--alexnet', required=True)
     _parser.add_argument('--write-results', action='store_true', default=False)
